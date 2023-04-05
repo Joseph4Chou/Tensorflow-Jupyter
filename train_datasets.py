@@ -1,6 +1,14 @@
 #!/usr/bin/python
-""" 
 
+""" 简易的时间序列训练模型
+
+    采用Tensorflow框架, 使用一维卷积神经网络对过程自检数据进行训练, 并将训练后的模型保存用于预测。为了简便起见, 未定义任何类、函
+    数, 编程逻辑也采用平铺直叙方式。
+
+    用法:
+    训练数据集与本文件应放于同一文件夹, 修改fname赋值语句中的文件名称。训练后的模型保存为h5文件。 
+    在使用该模型前, 需安装numpy、tensorflow和matplotlib, 建议使用conda安装并在虚拟环境中运行:
+    $python3 train_datasets.py
 """
 
 import os
@@ -9,7 +17,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from matplotlib import pyplot as plt
 
-# import train data from csv files.
+# 若替换训练集, 请修改以下赋值语句中的文件名称。
 fname = os.path.join("self_testing_data_2022_20_no_sifting.csv")
 with open(fname) as f:
     data = f.read()
@@ -22,7 +30,6 @@ lines = lines[1:]
 meta_datasets = np.zeros((len(lines),))
 raw_data = np.zeros((len(lines), len(header) - 1))
 
-# enumerate()枚举序列中的内容, 返回下标i和内容line
 for i, line in enumerate(lines):
     values = [float(x) for x in line.split(",")[1:]]
     meta_datasets[i] = values[0]
@@ -74,7 +81,7 @@ test_dataset = keras.utils.timeseries_dataset_from_array(
     batch_size=batch_size,
     start_index=num_train_samples + num_val_samples)
 
-# calculate MAE: np.mean(np.abs(preds - targets))
+# 计算基准值, MAE: np.mean(np.abs(preds - targets))
 def evaluate_naive_method(dataset):
     total_abs_err = 0.
     samples_seen = 0
@@ -86,7 +93,7 @@ def evaluate_naive_method(dataset):
 print(f"Validation MAE: {evaluate_naive_method(val_dataset):.2f}")
 print(f"Test MAE: {evaluate_naive_method(test_dataset):.2f}")
 
-# Conv1d train model
+# 一维卷积神经网络训练模型
 inputs = keras.Input(shape=(sequence_length, raw_data.shape[-1]))
 x = layers.Conv1D(8, 24, activation="relu")(inputs)
 x = layers.MaxPooling1D(2)(x)
@@ -109,9 +116,10 @@ history = model.fit(train_dataset,
 model = keras.models.load_model("saved_best_parameters.keras")
 print(f"Test MAE: {model.evaluate(test_dataset)[1]:.2f}")
 
+# 训练后的模型保存为h5文件
 model.save("conv1d_predict_model.h5")
 
-# train results
+# 查看训练效果
 loss = history.history["mae"]
 val_loss = history.history["val_mae"]
 epochs = range(1, len(loss) + 1)

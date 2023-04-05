@@ -47,7 +47,7 @@ std = raw_data[:num_train_samples].std(axis=0)
 raw_data /= std
 
 # 创建3个数据集，分别用于训练、验证和测试
-sampling_rate = 3
+sampling_rate = 4
 sequence_length = 256
 delay = sampling_rate * (sequence_length + 24 - 1)
 batch_size = 128

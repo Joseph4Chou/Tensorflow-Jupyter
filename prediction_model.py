@@ -1,5 +1,14 @@
 #!/usr/bin/python
-"""
+
+""" 简易的时间序列预测模型
+
+    采用Tensorflow框架, 通过已训练好的model对输入数据开展预测。为了简便起见, 未定义任何类、函数, 编程逻辑也采用平铺直叙方式。
+
+    用法：
+    测试集与本文件应放于同一文件夹, 修改fname赋值语句中的文件名称, 预测模型为预先训练好并保存的self_test_conv1d.h5, 主要预测均值
+    和标准偏差, 对预测集的前10个数据与实际值绘制折线图对比。
+    在使用该模型前, 需安装numpy、tensorflow和matplotlib, 建议使用conda安装并在虚拟环境中运行:
+    $python3 prediction_model.py
 """
 
 import os
@@ -7,7 +16,7 @@ import numpy as np
 from tensorflow import keras
 from matplotlib import pyplot as plt
 
-# import meta data from csv files
+# 若替换测试集, 请修改以下赋值语句中的文件名称。
 fname = os.path.join("2023.01.03-2.csv")
 with open(fname) as f:
     data = f.read()
@@ -23,7 +32,6 @@ print(f"shape of meta_datasets: {meta_datasets.shape}")
 raw_data = np.zeros((len(lines), len(header) - 1))
 print(f"shape of raw_data: {raw_data.shape}")
 
-# enumerate()枚举序列中的内容, 返回下标i和内容line
 for i, line in enumerate(lines):
     values = [float(x) for x in line.split(",")[1:]]
     meta_datasets[i] = values[0]
@@ -56,6 +64,7 @@ test_dataset = keras.utils.timeseries_dataset_from_array(
     batch_size=batch_size,
     start_index=0)
 
+# 若替换预测模型, 请修改以下赋值语句中的文件名称。
 model = keras.models.load_model("self_test_conv1d.h5")
 predictions = model.predict(test_dataset)
 print(f"Mean of predictions: {predictions.mean(axis=0)}")
